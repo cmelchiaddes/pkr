@@ -1,0 +1,11 @@
+br\com\mavenpoker\model\GanhosSemanal.class
+br\com\mavenpoker\dal\Dao.class
+br\com\mavenpoker\model\Pais.class
+br\com\mavenpoker\dal\ClubeDao.class
+br\com\mavenpoker\model\Agente.class
+br\com\mavenpoker\model\Clube.class
+br\com\mavenpoker\model\Ppst.class
+br\com\mavenpoker\Main.class
+br\com\mavenpoker\model\Jogador$JogadorBuilder.class
+br\com\mavenpoker\model\Liga.class
+br\com\mavenpoker\model\Jogador.class
