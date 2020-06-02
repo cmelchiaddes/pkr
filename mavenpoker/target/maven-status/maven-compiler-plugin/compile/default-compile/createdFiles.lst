@@ -1,0 +1,13 @@
+br\com\mavenpoker\models\Jogador$JogadorBuilder.class
+br\com\mavenpoker\Main$1.class
+br\com\mavenpoker\dal\Dao.class
+br\com\mavenpoker\models\Pais.class
+br\com\mavenpoker\models\Jogador.class
+br\com\mavenpoker\models\Liga.class
+br\com\mavenpoker\factories\EntityManagerFactoryService.class
+br\com\mavenpoker\models\Agente.class
+br\com\mavenpoker\models\GanhosSemanal.class
+br\com\mavenpoker\dal\ClubeDao.class
+br\com\mavenpoker\Main.class
+br\com\mavenpoker\models\Clube.class
+br\com\mavenpoker\models\Ppst.class
