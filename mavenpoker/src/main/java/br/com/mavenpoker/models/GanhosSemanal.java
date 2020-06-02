@@ -6,8 +6,10 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
 
 @Data
 @ToString
@@ -28,105 +30,111 @@ public class GanhosSemanal implements Serializable {
     @OneToMany(mappedBy = "ganhoSemanal", fetch = FetchType.LAZY)
     private List<Ppst> listaPpst;
     // ganhos do Jogador
-    // private Double ganhosJogadorGeral; METODO SOMA DOS ITENS
-    private Double ganhosJogadorDeAdversario;
-    private Double ganhosJogadorDividirEv;
-    private Double ganhosJogadorSeguro;
-    private Double ganhosJogadorJackpot;
+    // private BigDecimal ganhosJogadorGeral; METODO SOMA DOS ITENS
+    private BigDecimal ganhosJogadorDeAdversario = new BigDecimal(0);
+    private BigDecimal ganhosJogadorDividirEv = new BigDecimal(0);
+    private BigDecimal ganhosJogadorSeguro = new BigDecimal(0);
+    private BigDecimal ganhosJogadorJackpot = new BigDecimal(0);
     // ganhador do clube
-    // private Double ganhosDoClube; METODO SOMA DOS ITENS
-    private Double ganhosClubeTaxa;
-    private Double ganhosClubeTaxaJackpot;
-    private Double ganhosClubePremiosJackpot;
-    private Double ganhosClubeDividirEv;
-    private Double ganhosClubeSeguro;
-    private Double ganhosClubeValorTicket;
-    private Double ganhosClubeBuyInTicket;
-    private boolean possuiPpst;
+    // private BigDecimal ganhosDoClube; METODO SOMA DOS ITENS
+    private BigDecimal ganhosClubeTaxa = new BigDecimal(0);
+    private BigDecimal ganhosClubeTaxaJackpot = new BigDecimal(0);
+    private BigDecimal ganhosClubePremiosJackpot = new BigDecimal(0);
+    private BigDecimal ganhosClubeDividirEv = new BigDecimal(0);
+    private BigDecimal ganhosClubeSeguro = new BigDecimal(0);
+    private BigDecimal ganhosClubeValorTicket = new BigDecimal(0);
+    private BigDecimal ganhosClubeBuyInTicket = new BigDecimal(0);
+    private boolean possuiPpst = false;
 
     /**
      * Como Geral do Ganho dos jogadores é uma formula, estou executando ela.
      *
      * @return
      */
-    public Double calcGanhosJogadorGeral() {
-        // SOMA DE TODOS OS CAMPOS JOGADOR
-        Double resultado = ganhosJogadorDeAdversario + ganhosJogadorDividirEv + ganhosJogadorSeguro
-                + ganhosJogadorJackpot;
-        // CALC COM OU SEM PPST
-        if (possuiPpst) return resultado;
-        // Como Geral do Ganho dos jogadores é uma formula, estou executando ela.
-        return resultado + (-422.12);
+    public BigDecimal calcularGanhosJogadorGeral() {
+        return calcular(rst -> possuiPpst ? rst : rst.add(new BigDecimal(-422.12)),
+                ganhosJogadorDeAdversario, ganhosJogadorDividirEv, ganhosJogadorSeguro, ganhosJogadorJackpot);
     }
 
-    public Double calcGanhosClubeGeral() {
-        // Como Geral do Ganho do CLUBE é uma formula, estou executando ela.
-        Double resultado = ganhosClubeTaxa + ganhosClubeTaxaJackpot + ganhosClubePremiosJackpot + ganhosClubeDividirEv + ganhosClubeSeguro + ganhosClubeValorTicket + ganhosClubeBuyInTicket;
-        // CALC COM OU SEM PPST
-        if (possuiPpst) return resultado;
-        // Como Geral do Ganho dos jogadores é uma formula, estou executando ela.
-        return resultado + 88;
+    /**
+     * Como Geral do Ganho do CLUBE é uma formula, estou executando ela.
+     *
+     * @return
+     */
+    public BigDecimal calcularGanhosClubeGeral() {
+        return calcular(rst -> possuiPpst ? rst : rst.add(new BigDecimal(88)),
+                ganhosClubeTaxa, ganhosClubeTaxaJackpot, ganhosClubePremiosJackpot, ganhosClubeDividirEv, ganhosClubeSeguro, ganhosClubeValorTicket, ganhosClubeBuyInTicket);
     }
 
     // CALCULOS GERAIS SEM PPST//
 
     /**
      * CALC GANHOS E PERCAS GERAIS
+     * SOMA DOS GANHOS GERAIS DO JOGADOR E DO CLUBE
      */
-    public Double calcGanhosPerca() {
-        // SOMA DOS GANHOS GERAIS DO JOGADOR E DO CLUBE
-        return calcGanhosJogadorGeral() + calcGanhosClubeGeral();
+    public BigDecimal calcularGanhosPerca() {
+        return calcularGanhosJogadorGeral().add(calcularGanhosClubeGeral());
     }
 
     /**
      * CALC DE RAKE DA LIGA
+     * GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
      */
-    public Double calcRakeLiga() {
-        // GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
-        // return calcGanhosClubeGeral() * -clube.getPorcentagemRake();
-        return ganhosClubeTaxa + 88;
+    public BigDecimal calcularRakeLiga() {
+        return ganhosClubeTaxa.add(new BigDecimal(88));
     }
 
-
-    // CALC  APNEAS RAKE
-    public Double calcRakeFinal() {
-        // GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
-        // return calcGanhosJogadorGeral() * -clube.getPorcentagemRake();
-        return calcRakeLiga() * -0.06;
+    /**
+     * CALC  APNEAS RAKE
+     * GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
+     */
+    public BigDecimal calcularRakeFinal() {
+        return calcularRakeLiga().multiply(new BigDecimal(-0.06));
     }
 
-    // CALC REPOSICAO DE FICHA - GANHOS GERAIS DO JOGADOR * PORCENTAGEM DE RAKE DO
-    // CLUBE
-    public Double calcReposicaoFicha() {
-        // GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
-        // return calcGanhosJogadorGeral() * -clube.getPorcentagemRake();
-        return calcGanhosPerca() * -0.06;
+    /**
+     * CALC REPOSICAO DE FICHA - GANHOS GERAIS DO JOGADOR * PORCENTAGEM DE RAKE DO CLUBE
+     * GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
+     */
+    public BigDecimal calcularReposicaoFicha() {
+        return calcularGanhosPerca().multiply(new BigDecimal(-0.06));
     }
 
-    // CALC JACKPOT - SOMA DA TAXA JACKPOT COM PREMIO JACKPOT
-    // CLUBE
-    public Double calcJacpot() {
-        // GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
-        // return calcGanhosJogadorGeral() * -clube.getPorcentagemRake();
-        return getGanhosClubeTaxaJackpot() + getGanhosClubePremiosJackpot();
+    /**
+     * CALC JACKPOT - SOMA DA TAXA JACKPOT COM PREMIO JACKPOT CLUBE
+     * GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
+     */
+    public BigDecimal calcularJacpot() {
+        return getGanhosClubeTaxaJackpot().add(getGanhosClubePremiosJackpot());
     }
 
+    /**
+     * Calcula o total
+     * GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
+     *
+     * @return
+     */
+    public BigDecimal getTotal() {
+        return calcularGanhosPerca().add(calcularReposicaoFicha()).add(calcularRakeFinal()).add(calcularJacpot());
+    }
 
-    // -------- CALC TOTAL ----------
-    public Double calcTotal() {
-        // GANHOS DO CLUBE X PORCENTAGEM DE RAKE DO CLUBE
-        return calcGanhosPerca() + calcReposicaoFicha() + calcRakeFinal() + calcJacpot();
+    private BigDecimal calcular(Function<BigDecimal, BigDecimal> calculo, BigDecimal... valores) {
+        BigDecimal resultado = new BigDecimal(0);
+        for (BigDecimal valor : valores) {
+            resultado = resultado.add(valor);
+        }
+        return calculo.apply(resultado);
     }
 
     public String getResultados() {
-        return "Clube = " + clube.getNome() + "\nGanhos Geral Jogador = " + calcGanhosJogadorGeral()
-                + "\nGeral Clube = " + calcGanhosClubeGeral()
-                + "\n\nGanhos e Percas = " + calcGanhosPerca()
-                + "\nRake da Liga = " + calcRakeLiga()
-                + "\nRake = " + calcRakeFinal()
-                + "\nReposicao de fichas = " + calcReposicaoFicha()
-                + "\nJackpot = " + calcJacpot()
-                + "\nTOTAL = " + calcTotal();
+        return "Clube = " + clube.getNome() + "\nGanhos Geral Jogador = " + calcularGanhosJogadorGeral()
+                + "\nGeral Clube = " + calcularGanhosClubeGeral()
+                + "\n\nGanhos e Percas = " + calcularGanhosPerca()
+                + "\nRake da Liga = " + calcularRakeLiga()
+                + "\nRake = " + calcularRakeFinal()
+                + "\nReposicao de fichas = " + calcularReposicaoFicha()
+                + "\nJackpot = " + calcularJacpot()
+                + "\nTOTAL = " + getTotal();
     }
 
 }
